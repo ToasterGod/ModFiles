@@ -1,4 +1,5 @@
 ﻿using ModFiles;
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,18 +7,18 @@ using System.Linq;
 
 namespace ModFilesConsole
 {
-    class Executor
+    internal class Executor
     {
         private readonly IModFilesService modFilesService;
         private FolderParams folderParam;
         private readonly IWritableOptions<FolderParams> options;
+
         public Executor(IModFilesService modFilesService, IWritableOptions<FolderParams> options)
         {
             this.modFilesService = modFilesService;
             this.options = options;
             folderParam = options.Value;
         }
-
 
         public void Execute()
         {
@@ -33,7 +34,14 @@ namespace ModFilesConsole
         private FolderParams GetFolders(FolderParams folderParam)
         {
             bool isChanged = false;
-            Console.WriteLine($"current sourceRoot = {folderParam.SourceRoot}, enter new value or empty to keep existing.");
+            Console.WriteLine($"{folderParam}");
+
+            //TODO! Change this block to be more efficient
+            //Ask which value to change, 0 if none, or 1,2 or 3
+            //If anyone is changed set isChanged
+
+            folderParam.SourceRoot = GetNewValue("SourceRoot", folderParam.SourceRoot);
+
             var newRoot = Console.ReadLine();
             if (!string.IsNullOrEmpty(newRoot))
             {
@@ -54,6 +62,10 @@ namespace ModFilesConsole
                 isChanged = true;
                 folderParam.ModFolderName = newModFolder;
             }
+            //TODO! End of "Change this block to be more efficient"
+
+            //Keep as it is! Update as we do already
+            isChanged = !folderParam.Equals(options.Value);//The values differs
             if (isChanged)
             {
                 options.Update(newFolderParam =>
@@ -61,11 +73,10 @@ namespace ModFilesConsole
                         newFolderParam.SourceRoot = folderParam.SourceRoot;
                         newFolderParam.TargetRoot = folderParam.TargetRoot;
                         newFolderParam.ModFolderName = folderParam.ModFolderName;
-                    }); 
+                    });
             }
             return folderParam;
         }
-
 
         private void CopyMods(IEnumerable<string> mods, int[] selectedMods)
         {
@@ -88,7 +99,6 @@ namespace ModFilesConsole
             int index = 0;
             foreach (var mod in mods)
             {
-
                 Console.WriteLine($"{++index}.  {Path.GetFileName(mod)}");
             }
         }
