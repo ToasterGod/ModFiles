@@ -9,9 +9,9 @@
         public override string ToString()
         {
             return $"Current values:\n  " +
-                $"SourceRoot={SourceRoot}\n  " +
-                $"TargetRoot={TargetRoot}\n  " +
-                $"ModFolderName={ModFolderName}";
+                $"SourceRoot = {SourceRoot}\n  " +
+                $"TargetRoot = {TargetRoot}\n  " +
+                $"ModFolderName = {ModFolderName}";
         }
 
         public override bool Equals(object obj)

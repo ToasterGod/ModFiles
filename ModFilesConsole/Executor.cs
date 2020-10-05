@@ -37,32 +37,49 @@ namespace ModFilesConsole
             Console.WriteLine($"{folderParam}");
 
             //TODO! Change this block to be more efficient
-            //Ask which value to change, 0 if none, or 1,2 or 3
             //If anyone is changed set isChanged
 
-            folderParam.SourceRoot = GetNewValue("SourceRoot", folderParam.SourceRoot);
-
-            var newRoot = Console.ReadLine();
-            if (!string.IsNullOrEmpty(newRoot))
+            //add the folderparam == null check in execute
+            if (folderParam == null)
             {
-                folderParam.SourceRoot = newRoot;
+                Console.WriteLine("The required files are empty, please enter the needed directories...");
+                folderParam = UpdateValues(0, new FolderParams());
                 isChanged = true;
             }
-            Console.WriteLine($"current targetRoot = {folderParam.TargetRoot}, enter new value or empty to keep existing.");
-            var newTarget = Console.ReadLine();
-            if (!string.IsNullOrEmpty(newTarget))
+            else
             {
-                isChanged = true;
-                folderParam.TargetRoot = newTarget;
+                int chosenOption = 0;
+                do
+                {
+                    //TODO! if a single one is empty go here
+                    //while loop to ask the question again when parse fails?
+                    Console.WriteLine(
+                        "which would you like to change?\n" +
+                        "0: all three options\n" +
+                        $"1: the root directory where the original modfiles are stored (currently in {folderParam.SourceRoot})\n" +
+                        $"2: the target directory where the modfiles are copied into the game (currently in {folderParam.TargetRoot})\n" +
+                        $"3: the name of the target mod folder where the files are copied into (currently named {folderParam.ModFolderName})\n" +
+                        "9: quit");
+                    string input = Console.ReadLine();
+                    string msg = string.Empty;
+                    if (Int32.TryParse(input, out chosenOption))
+                    {
+                        if (chosenOption > -1 && chosenOption < 4)
+                        {
+                            folderParam = UpdateValues(chosenOption, folderParam);
+                        }
+                        else
+                        {
+                            msg = "not a valid selection";
+                        }
+                    }
+                    else
+                    {
+                        msg = "not a valid number";
+                    }
+                    Console.WriteLine(msg);
+                } while (chosenOption != 9);
             }
-            Console.WriteLine($"current modFolderName = {folderParam.ModFolderName}, enter new value or empty to keep existing.");
-            var newModFolder = Console.ReadLine();
-            if (!string.IsNullOrEmpty(newModFolder))
-            {
-                isChanged = true;
-                folderParam.ModFolderName = newModFolder;
-            }
-            //TODO! End of "Change this block to be more efficient"
 
             //Keep as it is! Update as we do already
             isChanged = !folderParam.Equals(options.Value);//The values differs
@@ -76,6 +93,49 @@ namespace ModFilesConsole
                     });
             }
             return folderParam;
+        }
+
+        private FolderParams UpdateValues(int choice, FolderParams folderParam)
+        {
+            FolderParams result = folderParam;
+            string response = string.Empty;
+            switch (choice)
+            {
+                case 0:
+                    for (int i = 1; i < 4; i++)
+                    {
+                        result = UpdateValues(i, result);
+                    }
+                    break;
+
+                case 1:
+                    result.SourceRoot = UpdateValue(result.SourceRoot);
+                    break;
+
+                case 2:
+                    result.TargetRoot = UpdateValue(result.TargetRoot);
+                    break;
+
+                case 3:
+                    result.ModFolderName = UpdateValue(result.ModFolderName);
+                    break;
+
+                default:
+                    break;
+            }
+            return result;
+        }
+
+        private static string UpdateValue(string current)
+        {
+            Console.WriteLine($"current value is \"{current}\", enter a new line to change it or press enter to keep current");
+            string response = Console.ReadLine();
+            if (!string.IsNullOrWhiteSpace(response))
+            {
+                return response;
+            }
+
+            return current;
         }
 
         private void CopyMods(IEnumerable<string> mods, int[] selectedMods)
