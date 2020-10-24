@@ -3,9 +3,15 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30320.27
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModFiles", "ModFiles\ModFiles.csproj", "{86BFCAD6-151C-4EF6-93B2-CA403CF28A75}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModFiles", "ModFiles\ModFiles.csproj", "{86BFCAD6-151C-4EF6-93B2-CA403CF28A75}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModFilesConsole", "ModFilesConsole\ModFilesConsole.csproj", "{A0ABAFFA-10A9-4ED9-856A-630A2FEADA59}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ModFilesConsole", "ModFilesConsole\ModFilesConsole.csproj", "{A0ABAFFA-10A9-4ED9-856A-630A2FEADA59}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Console", "Console", "{2B881B4F-BDC2-427E-AE25-4248C666C0B0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "WPF", "WPF", "{89570248-17AC-4D1E-999D-ED7BEE996EF1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModFilesClient", "ModFilesClient\ModFilesClient.csproj", "{3327F879-AE76-42D9-8D56-AF0F8CD1F78F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,9 +27,18 @@ Global
 		{A0ABAFFA-10A9-4ED9-856A-630A2FEADA59}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A0ABAFFA-10A9-4ED9-856A-630A2FEADA59}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A0ABAFFA-10A9-4ED9-856A-630A2FEADA59}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3327F879-AE76-42D9-8D56-AF0F8CD1F78F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3327F879-AE76-42D9-8D56-AF0F8CD1F78F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3327F879-AE76-42D9-8D56-AF0F8CD1F78F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3327F879-AE76-42D9-8D56-AF0F8CD1F78F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{86BFCAD6-151C-4EF6-93B2-CA403CF28A75} = {2B881B4F-BDC2-427E-AE25-4248C666C0B0}
+		{A0ABAFFA-10A9-4ED9-856A-630A2FEADA59} = {2B881B4F-BDC2-427E-AE25-4248C666C0B0}
+		{3327F879-AE76-42D9-8D56-AF0F8CD1F78F} = {89570248-17AC-4D1E-999D-ED7BEE996EF1}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {8CDB58AC-FDA6-40D9-AEC7-51443B063E5D}
