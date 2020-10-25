@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using ModFilesClient.Services;
 using ModFilesClient.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -30,6 +31,7 @@ namespace ModFilesClient
         {
             services.AddSingleton<MainViewModel>();
             services.AddTransient<MainWindow>();
+            services.AddTransient<IModsService, ModsService>();
         }
 
         protected override async void OnStartup(StartupEventArgs e)
