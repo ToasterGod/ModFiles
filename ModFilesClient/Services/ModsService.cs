@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace ModFilesClient.Services
 {
@@ -11,7 +12,7 @@ namespace ModFilesClient.Services
 
         public IEnumerable<string> GetModsFolders(string rootFolder)
         {
-            return Directory.EnumerateDirectories(rootFolder);
+            return Directory.EnumerateDirectories(rootFolder).Select(s => Path.GetFileName(s));
         }
     }
 }
