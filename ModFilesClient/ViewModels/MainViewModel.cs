@@ -12,35 +12,88 @@ namespace ModFilesClient.ViewModels
 {
     public class MainViewModel : ViewModelBase
     {
-        private List<string> mods;
-
+        #region mod variables
         public List<string> Mods
         {
             get { return mods; }
             set { Set(ref mods, value, true); }
         }
+        private List<string> mods;
 
-        public string SelectedMod
+        public List<string> SelectedMods
         {
-            get { return selectedMod; }
-            set { Set(ref selectedMod, value, true); }
+            get { return selectedMods; }
+            set { Set(ref selectedMods, value, true); }
         }
+        private List<string> selectedMods;
 
-        private string selectedMod;
+        #endregion
+
+        #region modpack variables
+        public ModPack SelectedModPack
+        {
+            get
+            { return selectedModPack; }
+            set
+            {
+                Set(ref selectedModPack, value, true);
+                ToggleVisibility();
+            }
+        }
+        private ModPack selectedModPack;
+
+        public IEnumerable<ModPack> ModPacks
+        {
+            get { return modPacks; }
+            set
+            {
+                Set(ref modPacks, value, true);
+            }
+        }
+        private IEnumerable<ModPack> modPacks;
+        #endregion
+
+        public string ModPackSearchText { get; set; }
         private readonly IModsService modsService;
 
-        public RelayCommand GetCommand { get; }
+        public RelayCommand NewPackCommand { get; }
+        public RelayCommand TempPackCommand { get; }
+        public RelayCommand DeletePackCommand { get; }
 
         public MainViewModel(IConfiguration configuration, IModsService modsService)
         {
-            GetCommand = new RelayCommand(async () => await GetAllAsync());
+            NewPackCommand = new RelayCommand(async () => await NewPackAsync());
+            TempPackCommand = new RelayCommand(async () => await TempPackAsync());
+            DeletePackCommand = new RelayCommand(async () => await DeletePackAsync());
+
             this.modsService = modsService;
             Mods = new List<string>(this.modsService.GetModsFolders(configuration.GetValue<string>("RootFolder")));
         }
-
-        private Task GetAllAsync()
+        private void ToggleVisibility()
         {
-            return Task.CompletedTask;
+            if (SelectedModPack != null)
+            {
+                //TODO either change the view to one where you edit the modpacks files or change visibleMods to contain all the mods available for selection
+            }
+            else
+            {
+
+            }
+        }
+
+        private async Task DeletePackAsync()
+        {
+
+        }
+
+        private async Task TempPackAsync()
+        {
+
+        }
+
+        private async Task NewPackAsync()
+        {
+
         }
     }
 }

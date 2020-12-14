@@ -14,11 +14,11 @@ using System.Windows.Shapes;
 namespace ModFilesClient.Views
 {
     /// <summary>
-    /// Interaction logic for OurMessageControl.xaml
+    /// Interaction logic for ModLoader.xaml
     /// </summary>
-    public partial class OurMessageControl : UserControl
+    public partial class ModLoader : UserControl
     {
-        public OurMessageControl()
+        public ModLoader()
         {
             InitializeComponent();
         }
