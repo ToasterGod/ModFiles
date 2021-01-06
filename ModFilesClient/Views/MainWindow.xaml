@@ -7,7 +7,7 @@
         xmlns:Views="clr-namespace:ModFilesClient.Views" x:Class="ModFilesClient.MainWindow"
         DataContext="{Binding MainViewModel, Source={StaticResource Locator}}"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="500" Width="810">
     <StackPanel>
         <Views:ModLoader />
     </StackPanel>

@@ -12,6 +12,7 @@
             <Style TargetType="Window">
                 <Setter Property="FontSize" Value="28" />
             </Style>
+            <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
         </ResourceDictionary>
     </Application.Resources>
 
