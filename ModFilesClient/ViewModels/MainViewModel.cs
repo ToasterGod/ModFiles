@@ -1,11 +1,14 @@
-﻿using GalaSoft.MvvmLight;
-using GalaSoft.MvvmLight.Command;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Toolkit.Mvvm.ComponentModel;
+using Microsoft.Toolkit.Mvvm.Input;
+
 using ModFilesClient.Helpers;
 using ModFilesClient.Models;
 using ModFilesClient.Services;
+
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -14,58 +17,58 @@ using System.Threading.Tasks;
 
 namespace ModFilesClient.ViewModels
 {
-    public class MainViewModel : ViewModelBase
+    public class MainViewModel : ObservableObject
     {
         #region mod variables
-        private List<string> allMods;
-        private List<string> allActiveMods;
+        private List<Mod> allMods;
+        private List<Mod> allActiveMods;
 
         public bool ModVisibility
         {
             get => modVisibility;
-            set => Set(ref modVisibility, value, true);
+            set => SetProperty(ref modVisibility, value);
         }
         private bool modVisibility;
 
-        public IEnumerable<string> Mods
+        public ObservableCollection<Mod> Mods
         {
             get => mods;
-            set => Set(ref mods, value, true);
+            set => SetProperty(ref mods, value);
         }
-        private IEnumerable<string> mods;
+        private ObservableCollection<Mod> mods;
 
-        public List<string> SelectedMods
+        public Mod SelectedMod
         {
-            get => selectedMods;
-            set => Set(ref selectedMods, value, true);
+            get => selectedMod;
+            set => SetProperty(ref selectedMod, value);
         }
-        private List<string> selectedMods;
+        private Mod selectedMod;
 
         public string ModSearchText
         {
             get => modSearchText;
-            set => Set(nameof(ModSearchText), ref modSearchText, value, true);
+            set => SetProperty(ref modSearchText, value);
         }
         private string modSearchText;
 
-        public IEnumerable<string> ActiveMods
+        public ObservableCollection<Mod> ActiveMods
         {
             get => activeMods;
-            set => Set(ref activeMods, value, true);
+            set => SetProperty(ref activeMods, value);
         }
-        private IEnumerable<string> activeMods;
+        private ObservableCollection<Mod> activeMods;
 
-        public List<string> SelectedActiveMods
+        public Mod SelectedActiveMod
         {
-            get => selectedActiveMods;
-            set => Set(ref selectedActiveMods, value, true);
+            get => selectedActiveMod;
+            set => SetProperty(ref selectedActiveMod, value);
         }
-        private List<string> selectedActiveMods;
+        private Mod selectedActiveMod;
 
         public string ActiveModSearchText
         {
             get => activeModSearchText;
-            set => Set(nameof(ActiveModSearchText), ref activeModSearchText, value, true);
+            set => SetProperty(ref activeModSearchText, value);
         }
         private string activeModSearchText;
         #endregion
@@ -76,7 +79,7 @@ namespace ModFilesClient.ViewModels
             get => modPackVisibility;
             set
             {
-                Set(ref modPackVisibility, value, true);
+                SetProperty(ref modPackVisibility, value);
                 ModVisibility = !value;
             }
         }
@@ -87,10 +90,10 @@ namespace ModFilesClient.ViewModels
             get => selectedModPack;
             set
             {
-                Set(ref selectedModPack, value, true);
+                SetProperty(ref selectedModPack, value);
                 if (value != null)
                 {
-                    Mods = value.Mods;
+                    Mods = new ObservableCollection<Mod>(value.Mods);
                 }
             }
         }
@@ -99,92 +102,115 @@ namespace ModFilesClient.ViewModels
         public IEnumerable<ModPack> ModPacks
         {
             get => modPacks;
-            set => Set(ref modPacks, value, true);
+            set => SetProperty(ref modPacks, value);
         }
         private IEnumerable<ModPack> modPacks;
 
-        private List<ModPack> allModPacks = new List<ModPack>();
+        private ModPackList allModPacks;
         private bool savePack;
 
         public string ModPackSearchText
         {
             get => modPackSearchText;
-            set => Set(nameof(ModPackSearchText), ref modPackSearchText, value, true);
+            set => SetProperty(ref modPackSearchText, value);
         }
         private string modPackSearchText;
         #endregion
 
+        #region Commands
         private readonly IModsService modsService;
         private IConfiguration configuration;
 
-        public RelayCommand NewPackCommand { get; }
-        public RelayCommand DeletePackCommand { get; }
-        public RelayCommand EditPackCommand { get; }
+        public AsyncRelayCommand NewPackCommand { get; }
+        public AsyncRelayCommand DeletePackCommand { get; }
+        public AsyncRelayCommand EditPackCommand { get; }
 
-        public RelayCommand TempPackCommand { get; }
-        public RelayCommand SavePackCommand { get; }
-        public RelayCommand AddModCommand { get; }
-        public RelayCommand RemoveModCommand { get; }
-        public RelayCommand CancelSelectionCommand { get; }
-
+        public AsyncRelayCommand TempPackCommand { get; }
+        public AsyncRelayCommand SavePackCommand { get; }
+        public AsyncRelayCommand AddModCommand { get; }
+        public AsyncRelayCommand RemoveModCommand { get; }
+        public AsyncRelayCommand UpdateModCommand { get; }
+        public AsyncRelayCommand CancelSelectionCommand { get; }
+        #endregion
         public MainViewModel(IConfiguration configuration, IModsService modsService)
         {
-            //TODO CanSelectMultipleItems inherited from multiselect
-            NewPackCommand = new RelayCommand(async () => await NewPackAsync());
-            TempPackCommand = new RelayCommand(async () => await TempPackAsync());
-            SavePackCommand = new RelayCommand(async () => await SavePackAsync());
-            DeletePackCommand = new RelayCommand(async () => await DeletePackAsync());
-            EditPackCommand = new RelayCommand(async () => await EditPackAsync());
-            CancelSelectionCommand = new RelayCommand(async () => await CancelSelectionAsync());
+            NewPackCommand = new AsyncRelayCommand(async () => await NewPack());
+            TempPackCommand = new AsyncRelayCommand(async () => await TempPackAsync());
+            SavePackCommand = new AsyncRelayCommand(async () => await SavePackAsync());
+            DeletePackCommand = new AsyncRelayCommand(async () => await DeletePackAsync());
+            EditPackCommand = new AsyncRelayCommand(async () => await EditPack());
 
+            AddModCommand = new AsyncRelayCommand(async () => await AddModsAsync());
+            RemoveModCommand = new AsyncRelayCommand(async () => await RemoveModsAsync());
+            UpdateModCommand = new AsyncRelayCommand(async () => await UpdateModsAsync());
+            CancelSelectionCommand = new AsyncRelayCommand(async () => await CancelSelectionAsync());
+
+            allModPacks = new ModPackList();
+            allActiveMods = new List<Mod>();
             this.modsService = modsService;
             this.configuration = configuration;
             ModPackVisibility = true;
+            UpdateModCommand.Execute(null);
         }
+
+        private ObservableCollection<Mod> ToObservableCollection(List<Mod> enumerable) => new ObservableCollection<Mod>(enumerable);
 
         private Task CancelSelectionAsync()
         {
             SelectedModPack = null;
-            SelectedMods = null;
+            SelectedMod = null;
             ModPackVisibility = true;
             return Task.CompletedTask;
         }
 
-        public Task UpdateModsAsync()
-        {
-            allModPacks.Clear();
-            if (File.Exists("ModPacks.json"))
-            {
-                allModPacks.AddRange(JsonSerializer.Deserialize<IEnumerable<ModPack>>(File.ReadAllText("ModPacks.json")));
-            }
-            FilterModPacks();
-            allMods = new List<string>(modsService.GetModsFolders(configuration.GetValue<string>("RootFolder")));
-            return Task.CompletedTask;
-        }
-
         #region ModPack methods
-        private Task SaveModPacksAsync()
+        private Task UpdateModPacksAsync()
         {
             File.WriteAllText("ModPacks.json", JsonSerializer.Serialize(allModPacks));
+            SelectedMod = null;
+            ModPackVisibility = true;
             return Task.CompletedTask;
         }
 
         private async Task DeletePackAsync()
         {
             allModPacks.Remove(selectedModPack);
-            await SaveModPacksAsync();
+            await UpdateModPacksAsync();
             FilterModPacks();
         }
 
-        private async Task TempPackAsync()
+        private Task TempPackAsync()
         {
             selectedModPack.Mods = ActiveMods.ToList();
             if (!savePack)
             {
                 FilterModPacks();
                 FilterMods();
-                //TODO activate the temppack
+                ActivatePackAsync();
+                ModPackVisibility = false;
             }
+            return Task.CompletedTask;
+        }
+
+        private Task ActivatePackAsync()
+        {
+            string sourceRoot = configuration.GetValue<string>("FolderSettings:RootFolder");
+            string targetRoot = configuration.GetValue<string>("FolderSettings:TargetFolder");
+
+            foreach (Mod mod in activeMods)
+            {
+                string source = Path.Join(sourceRoot, mod.ModName);
+                string? subFolder = Path.GetDirectoryName(targetRoot);
+
+                if (subFolder != null && !Directory.Exists(subFolder))
+                {
+                    Directory.CreateDirectory(subFolder);
+                    //TODO add a message about target folder not existing
+                }
+
+                File.Copy(source, targetRoot, true);
+            }
+            return Task.CompletedTask;
         }
 
         private async Task SavePackAsync()
@@ -201,21 +227,26 @@ namespace ModFilesClient.ViewModels
                 ErrorMessage.ShowError(ex, "Try putting the Modloader map somewhere public.");
             }
             savePack = false;
+            OnPropertyChanged("allModPacks");
+            ModPackVisibility = true;
         }
 
-        private async Task NewPackAsync()
+        private Task NewPack()
         {
             SelectedModPack = new ModPack
             {
                 ID = Guid.NewGuid(),
                 Name = "New Pack",
-                Mods = new List<string>()
+                Mods = new List<Mod>()
             };
             FilterModPacks();
             FilterMods();
+            ModPackVisibility = false;
+
+            return Task.CompletedTask;
         }
 
-        private Task EditPackAsync()
+        private Task EditPack()
         {
             ModPackVisibility = false;
             return Task.CompletedTask;
@@ -236,18 +267,57 @@ namespace ModFilesClient.ViewModels
         #endregion
 
         #region Mod methods
+        public Task UpdateModsAsync()
+        {
+            allModPacks.Clear();
+            if (File.Exists("ModPacks.json"))
+            {
+                allModPacks.ToList().AddRange(JsonSerializer.Deserialize<IEnumerable<ModPack>>(File.ReadAllText("ModPacks.json")));
+            }
+            FilterModPacks();
+            allMods = modsService.GetModsFolders(configuration.GetValue<string>("FolderSettings:RootFolder")).ToList();
+
+            return Task.CompletedTask;
+        }
+
+        private Task RemoveModsAsync()
+        {
+            List<Mod> tempList = allActiveMods;
+            Mods.Add(SelectedActiveMod);
+
+            tempList.Remove(SelectedActiveMod);
+            ActiveMods = new ObservableCollection<Mod>(allActiveMods);
+            OnPropertyChanged("Mods");
+
+            return Task.CompletedTask;
+        }
+
+        private Task AddModsAsync()
+        {
+            allActiveMods.Add(SelectedMod);
+
+            List<Mod> templist = Mods.ToList();
+            templist.Remove(SelectedMod);
+            Mods = new ObservableCollection<Mod>(templist);
+            SelectedMod = null;
+            ActiveMods = new ObservableCollection<Mod>(allActiveMods);
+
+
+            return Task.CompletedTask;
+        }
+
         private void FilterMods()
         {
             Mods = null;
             if (string.IsNullOrWhiteSpace(ModSearchText))
             {
-                Mods = allMods;
-                ActiveMods = allActiveMods;
+                Mods = ToObservableCollection(allMods);
+                ActiveMods = ToObservableCollection(allActiveMods);
             }
             else
             {
-                ActiveMods = allActiveMods.Where(p => p.ToLower().StartsWith(ModPackSearchText.ToLower()));
-                Mods = allMods.Where(p => p.ToLower().StartsWith(ModPackSearchText.ToLower()));
+                ActiveMods = (ObservableCollection<Mod>)allActiveMods.Where(p => p.ModName.ToLower().StartsWith(ModPackSearchText.ToLower()));
+                Mods = ToObservableCollection(allMods.Where(p => p.ModName.ToLower().StartsWith(ModPackSearchText.ToLower())).ToList());
             }
         }
         #endregion

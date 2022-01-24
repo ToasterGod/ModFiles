@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using ModFilesClient.Models;
+
+using System.Collections.Generic;
 
 namespace ModFilesClient.Services
 {
     public interface IModsService
     {
-        IEnumerable<string> GetModsFolders(string rootFolder);
+        IEnumerable<Mod> GetModsFolders(string rootFolder);
     }
 }
