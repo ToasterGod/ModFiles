@@ -19,6 +19,11 @@ namespace ModFilesClient.ViewModels
 {
     public class MainViewModel : ObservableObject
     {
+        private readonly IModsService modsService;
+        private IConfiguration configuration;
+        string sourceRoot;
+        string targetRoot;
+        string modpackRoot;
         #region mod variables
         private List<Mod> allMods;
         private List<Mod> allActiveMods;
@@ -74,6 +79,9 @@ namespace ModFilesClient.ViewModels
         #endregion
 
         #region modpack variables
+        private ModPackList allModPacks;
+        private bool savePack;
+
         public bool ModPackVisibility
         {
             get => modPackVisibility;
@@ -85,6 +93,13 @@ namespace ModFilesClient.ViewModels
         }
         private bool modPackVisibility;
 
+        public bool PackSelectedVisibility
+        {
+            get => packSelectedVisibility;
+            set => SetProperty(ref packSelectedVisibility, value);
+        }
+        private bool packSelectedVisibility;
+
         public ModPack SelectedModPack
         {
             get => selectedModPack;
@@ -94,6 +109,11 @@ namespace ModFilesClient.ViewModels
                 if (value != null)
                 {
                     Mods = new ObservableCollection<Mod>(value.Mods);
+                    PackSelectedVisibility = true;
+                }
+                else
+                {
+                    PackSelectedVisibility = false;
                 }
             }
         }
@@ -106,9 +126,6 @@ namespace ModFilesClient.ViewModels
         }
         private IEnumerable<ModPack> modPacks;
 
-        private ModPackList allModPacks;
-        private bool savePack;
-
         public string ModPackSearchText
         {
             get => modPackSearchText;
@@ -118,9 +135,6 @@ namespace ModFilesClient.ViewModels
         #endregion
 
         #region Commands
-        private readonly IModsService modsService;
-        private IConfiguration configuration;
-
         public AsyncRelayCommand NewPackCommand { get; }
         public AsyncRelayCommand DeletePackCommand { get; }
         public AsyncRelayCommand EditPackCommand { get; }
@@ -134,6 +148,10 @@ namespace ModFilesClient.ViewModels
         #endregion
         public MainViewModel(IConfiguration configuration, IModsService modsService)
         {
+            sourceRoot = configuration.GetValue<string>("FolderSettings:RootFolder");
+            targetRoot = configuration.GetValue<string>("FolderSettings:TargetFolder");
+            modpackRoot = configuration.GetValue<string>("FolderSettings:ModPackList");
+
             NewPackCommand = new AsyncRelayCommand(async () => await NewPack());
             TempPackCommand = new AsyncRelayCommand(async () => await TempPackAsync());
             SavePackCommand = new AsyncRelayCommand(async () => await SavePackAsync());
@@ -142,7 +160,7 @@ namespace ModFilesClient.ViewModels
 
             AddModCommand = new AsyncRelayCommand(async () => await AddModsAsync());
             RemoveModCommand = new AsyncRelayCommand(async () => await RemoveModsAsync());
-            UpdateModCommand = new AsyncRelayCommand(async () => await UpdateModsAsync());
+            UpdateModCommand = new AsyncRelayCommand(async () => await UpdateMods());
             CancelSelectionCommand = new AsyncRelayCommand(async () => await CancelSelectionAsync());
 
             allModPacks = new ModPackList();
@@ -166,7 +184,7 @@ namespace ModFilesClient.ViewModels
         #region ModPack methods
         private Task UpdateModPacksAsync()
         {
-            File.WriteAllText("ModPacks.json", JsonSerializer.Serialize(allModPacks));
+            File.WriteAllText(modpackRoot, JsonSerializer.Serialize(allModPacks));
             SelectedMod = null;
             ModPackVisibility = true;
             return Task.CompletedTask;
@@ -194,22 +212,39 @@ namespace ModFilesClient.ViewModels
 
         private Task ActivatePackAsync()
         {
-            string sourceRoot = configuration.GetValue<string>("FolderSettings:RootFolder");
-            string targetRoot = configuration.GetValue<string>("FolderSettings:TargetFolder");
-
-            foreach (Mod mod in activeMods)
+            List<string> activeModPaths = Directory.GetDirectories(targetRoot, SearchOption.AllDirectories.ToString()).ToList();
+            List<string> modPathsToActivate = new List<string>();
+            List<string> c = new List<string>();
+            foreach (Mod mod in ActiveMods)
             {
-                string source = Path.Join(sourceRoot, mod.ModName);
-                string? subFolder = Path.GetDirectoryName(targetRoot);
-
-                if (subFolder != null && !Directory.Exists(subFolder))
-                {
-                    Directory.CreateDirectory(subFolder);
-                    //TODO add a message about target folder not existing
-                }
-
-                File.Copy(source, targetRoot, true);
+                modPathsToActivate.AddRange(Directory.GetDirectories($"{targetRoot}\\{mod.ModName}\\Nativepc", SearchOption.AllDirectories.ToString()));
             }
+
+            foreach (string obj in activeModPaths)
+            {
+                foreach (string item in modPathsToActivate)
+                {
+                    if (obj != item)
+                    {
+                        activeModPaths.Remove(obj);
+                    }
+                }
+                foreach (var item in modPathsToActivate)
+                {
+                    if (item == obj)
+                    {
+                        modPathsToActivate.Remove(item);
+                    }
+                }
+            }
+            //string source = Path.Join(sourceRoot, mod.ModName);
+            //string? subFolder = Path.GetDirectoryName(targetRoot);
+            //if (subFolder != null && !Directory.Exists(subFolder))
+            //{
+            //    Directory.CreateDirectory(subFolder);
+            //}
+            //File.Copy(source, targetRoot, true);
+
             return Task.CompletedTask;
         }
 
@@ -220,7 +255,7 @@ namespace ModFilesClient.ViewModels
             allModPacks.Add(SelectedModPack);
             try
             {
-                File.WriteAllText("ModPacks.json", JsonSerializer.Serialize(allModPacks));
+                File.WriteAllText(modpackRoot, JsonSerializer.Serialize(allModPacks));
             }
             catch (Exception ex)
             {
@@ -267,15 +302,24 @@ namespace ModFilesClient.ViewModels
         #endregion
 
         #region Mod methods
-        public Task UpdateModsAsync()
+        public Task UpdateMods()
         {
             allModPacks.Clear();
-            if (File.Exists("ModPacks.json"))
+            if (File.Exists(modpackRoot))
             {
-                allModPacks.ToList().AddRange(JsonSerializer.Deserialize<IEnumerable<ModPack>>(File.ReadAllText("ModPacks.json")));
+                IEnumerable<ModPack> test = JsonSerializer.Deserialize<IEnumerable<ModPack>>(File.ReadAllText(modpackRoot));
+                foreach (ModPack pack in test)
+                {
+                    allModPacks.Add(new ModPack
+                    {
+                        ID = pack.ID,
+                        Name = pack.Name,
+                        Mods = pack.Mods
+                    });
+                }
             }
             FilterModPacks();
-            allMods = modsService.GetModsFolders(configuration.GetValue<string>("FolderSettings:RootFolder")).ToList();
+            allMods = modsService.GetModsFolders(sourceRoot).ToList();
 
             return Task.CompletedTask;
         }

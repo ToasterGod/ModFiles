@@ -35,11 +35,12 @@
                 </DataGrid>
                 <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="10,10,10,0">
                     <Button Height="32" Width="120" Margin="0,0,4,0" Content="New Modpack" Command="{Binding NewPackCommand}"/>
-                    <Button Height="32" Width="120" Margin="4,0,4,0" Content="Delete Modpack" Command="{Binding DeletePackCommand}"/>
+                    <Button Height="32" Width="120" Margin="4,0" Content="Delete Modpack" Command="{Binding DeletePackCommand}"/>
+                    <Button Height="32" Width="120" Margin="4,0" Content="Activate Modpack" Command="{Binding DeletePackCommand}" Visibility="{Binding PackSelectedVisibility, Converter={StaticResource BoolToVisibility}}"/>
                 </StackPanel>
             </Grid>
 
-            <Grid Grid.Column="2">
+            <Grid Grid.Column="2" Visibility="{Binding PackSelectedVisibility, Converter={StaticResource BoolToVisibility}}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="1*" />
                     <RowDefinition Height="320" />

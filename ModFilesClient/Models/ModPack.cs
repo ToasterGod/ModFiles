@@ -20,6 +20,5 @@ namespace ModFilesClient.Models
     public class Mod
     {
         public string ModName { get; set; }
-        public IEnumerable<string> Files { get; set; }
     }
 }

@@ -16,7 +16,7 @@ namespace ModFilesClient.ViewModels
         public static async Task<MainViewModel> GetMainViewModel()
         {
             MainViewModel vm = App.ServiceProvider.GetRequiredService<MainViewModel>();
-            await vm.UpdateModsAsync();
+            await vm.UpdateMods();
             return vm;
         }
     }
