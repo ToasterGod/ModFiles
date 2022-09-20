@@ -1,6 +1,7 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Toolkit.Mvvm.ComponentModel;
-using Microsoft.Toolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+
+using Microsoft.Extensions.Configuration;
+using CommunityToolkit.Mvvm.Input;
 
 using ModFilesClient.Helpers;
 using ModFilesClient.Models;
@@ -11,7 +12,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
@@ -24,6 +24,7 @@ namespace ModFilesClient.ViewModels
         string sourceRoot;
         string targetRoot;
         string modpackRoot;
+
         #region mod variables
         private List<Mod> allMods;
         private List<Mod> allActiveMods;
@@ -61,7 +62,7 @@ namespace ModFilesClient.ViewModels
             get => activeMods;
             set => SetProperty(ref activeMods, value);
         }
-        private ObservableCollection<Mod> activeMods;
+        private ObservableCollection<Mod> activeMods = new ObservableCollection<Mod>();
 
         public Mod SelectedActiveMod
         {
@@ -80,7 +81,6 @@ namespace ModFilesClient.ViewModels
 
         #region modpack variables
         private ModPackList allModPacks;
-        private bool savePack;
 
         public bool ModPackVisibility
         {
@@ -106,7 +106,7 @@ namespace ModFilesClient.ViewModels
             set
             {
                 SetProperty(ref selectedModPack, value);
-                if (value != null)
+                if (value is not null)
                 {
                     Mods = new ObservableCollection<Mod>(value.Mods);
                     PackSelectedVisibility = true;
@@ -139,7 +139,7 @@ namespace ModFilesClient.ViewModels
         public AsyncRelayCommand DeletePackCommand { get; }
         public AsyncRelayCommand EditPackCommand { get; }
 
-        public AsyncRelayCommand TempPackCommand { get; }
+        public AsyncRelayCommand UsePackCommand { get; }
         public AsyncRelayCommand SavePackCommand { get; }
         public AsyncRelayCommand AddModCommand { get; }
         public AsyncRelayCommand RemoveModCommand { get; }
@@ -153,7 +153,7 @@ namespace ModFilesClient.ViewModels
             modpackRoot = configuration.GetValue<string>("FolderSettings:ModPackList");
 
             NewPackCommand = new AsyncRelayCommand(async () => await NewPack());
-            TempPackCommand = new AsyncRelayCommand(async () => await TempPackAsync());
+            UsePackCommand = new AsyncRelayCommand(async () => await UsePackAsync());
             SavePackCommand = new AsyncRelayCommand(async () => await SavePackAsync());
             DeletePackCommand = new AsyncRelayCommand(async () => await DeletePackAsync());
             EditPackCommand = new AsyncRelayCommand(async () => await EditPack());
@@ -173,6 +173,7 @@ namespace ModFilesClient.ViewModels
 
         private ObservableCollection<Mod> ToObservableCollection(List<Mod> enumerable) => new ObservableCollection<Mod>(enumerable);
 
+        #region ModPack methods
         private Task CancelSelectionAsync()
         {
             SelectedModPack = null;
@@ -181,7 +182,6 @@ namespace ModFilesClient.ViewModels
             return Task.CompletedTask;
         }
 
-        #region ModPack methods
         private Task UpdateModPacksAsync()
         {
             File.WriteAllText(modpackRoot, JsonSerializer.Serialize(allModPacks));
@@ -197,61 +197,105 @@ namespace ModFilesClient.ViewModels
             FilterModPacks();
         }
 
-        private Task TempPackAsync()
+        private Task UsePackAsync()
         {
-            selectedModPack.Mods = ActiveMods.ToList();
-            if (!savePack)
+
+            if (ActiveMods.Count == 0)
             {
-                FilterModPacks();
-                FilterMods();
-                ActivatePackAsync();
-                ModPackVisibility = false;
+                allActiveMods = selectedModPack.Mods;
             }
+            ActivatePackAsync();
+            FilterModPacks();
+            FilterMods();
+
             return Task.CompletedTask;
         }
 
         private Task ActivatePackAsync()
         {
-            List<string> activeModPaths = Directory.GetDirectories(targetRoot, SearchOption.AllDirectories.ToString()).ToList();
-            List<string> modPathsToActivate = new List<string>();
-            List<string> c = new List<string>();
-            foreach (Mod mod in ActiveMods)
-            {
-                modPathsToActivate.AddRange(Directory.GetDirectories($"{targetRoot}\\{mod.ModName}\\Nativepc", SearchOption.AllDirectories.ToString()));
-            }
+            List<string> allActiveModPaths = new List<string>(Directory.GetFiles(targetRoot, "*", SearchOption.AllDirectories));
+            List<string> pathsToActivate = new List<string>();
 
-            foreach (string obj in activeModPaths)
+            List<FileInfo> filesToActivate = new List<FileInfo>();
+            List<FileInfo> activeFiles = new List<FileInfo>();
+
+            allActiveMods.ForEach(mod =>
+            pathsToActivate.AddRange(Directory.GetFiles($"{sourceRoot}\\{mod.ModName}\\Nativepc", "*", SearchOption.AllDirectories)));
+
+            pathsToActivate.ForEach(modPath =>
+            filesToActivate.Add(new FileInfo(modPath)));
+
+            allActiveModPaths.ForEach(modPath =>
+            activeFiles.Add(new FileInfo(modPath)));
+
+            List<FileInfo> tempActivePaths = new List<FileInfo>(activeFiles);
+            List<FileInfo> tempPathsToActivate = new List<FileInfo>(filesToActivate);
+            foreach (FileInfo activeFile in activeFiles)
             {
-                foreach (string item in modPathsToActivate)
+                foreach (FileInfo fileToActivate in filesToActivate)
                 {
-                    if (obj != item)
+                    if (File.Exists(activeFile.FullName))
                     {
-                        activeModPaths.Remove(obj);
-                    }
-                }
-                foreach (var item in modPathsToActivate)
-                {
-                    if (item == obj)
-                    {
-                        modPathsToActivate.Remove(item);
+                        if (fileToActivate.Name == activeFile.Name)
+                        { //TODO make sure it iterates through all elements
+                            for (int i = 0; i < tempPathsToActivate.Count; i++)
+                            {
+                                if (tempPathsToActivate[i].Name == activeFile.Name)
+                                {
+                                    tempPathsToActivate.Remove(tempPathsToActivate[i]);
+                                }
+                            }
+                        }
+                        else if (!activeFiles.Any(f => f.Name == fileToActivate.Name))
+                        {
+                            for (int i = 0; i < tempActivePaths.Count; i++)
+                            {
+                                if (tempActivePaths[i].Name == activeFile.Name)
+                                {
+                                    File.Delete(tempActivePaths[i].FullName);
+                                    tempActivePaths.Remove(tempActivePaths[i]);
+
+                                    foreach (var item in Directory.GetDirectories(targetRoot, "*", SearchOption.AllDirectories))
+                                    {
+                                        if ((Directory.GetFiles(item).Length + Directory.GetDirectories(item).Length) == 0)
+                                        {
+                                            Directory.Delete(item);
+                                            //TODO remove all empty directories
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
-            //string source = Path.Join(sourceRoot, mod.ModName);
-            //string? subFolder = Path.GetDirectoryName(targetRoot);
-            //if (subFolder != null && !Directory.Exists(subFolder))
-            //{
-            //    Directory.CreateDirectory(subFolder);
-            //}
-            //File.Copy(source, targetRoot, true);
+            activeFiles = tempActivePaths;
+            filesToActivate = tempPathsToActivate;
+
+            foreach (FileInfo filePath in filesToActivate)
+            {
+                string[] pathParts = filePath.FullName.Split(Path.DirectorySeparatorChar);
+                int startAfter = Array.IndexOf(pathParts, "Nativepc"); //TODO fix hardcoding
+
+                string? subFolder = Path.GetDirectoryName($"{targetRoot}\\{string.Join(Path.DirectorySeparatorChar.ToString(), pathParts, startAfter, pathParts.Length - startAfter)}");
+                if (subFolder is not null && !Directory.Exists(subFolder))
+                {
+                    Directory.CreateDirectory(subFolder);
+                }
+
+                DirectoryInfo dir = new DirectoryInfo(string.Join(Path.DirectorySeparatorChar.ToString(), pathParts, 0, pathParts.Length - 1));
+                FileInfo file = dir.GetFiles().FirstOrDefault(f => f.FullName == filePath.FullName);
+
+                string targetFilePath = Path.Combine(subFolder, file.Name);
+                file.CopyTo(targetFilePath);
+
+            }
 
             return Task.CompletedTask;
         }
 
-        private async Task SavePackAsync()
+        private async Task SavePackAsync() //TODO check this
         {
-            savePack = true;
-            await TempPackAsync();
             allModPacks.Add(SelectedModPack);
             try
             {
@@ -259,15 +303,16 @@ namespace ModFilesClient.ViewModels
             }
             catch (Exception ex)
             {
-                ErrorMessage.ShowError(ex, "Try putting the Modloader map somewhere public.");
+                ErrorMessage.ShowError(ex, "Try putting the Modloader folder somewhere public.");
             }
-            savePack = false;
             OnPropertyChanged("allModPacks");
             ModPackVisibility = true;
+            FilterModPacks();
         }
 
         private Task NewPack()
         {
+            SelectedModPack = null;
             SelectedModPack = new ModPack
             {
                 ID = Guid.NewGuid(),
@@ -276,14 +321,14 @@ namespace ModFilesClient.ViewModels
             };
             FilterModPacks();
             FilterMods();
-            ModPackVisibility = false;
 
             return Task.CompletedTask;
         }
 
         private Task EditPack()
         {
-            ModPackVisibility = false;
+            allActiveMods = SelectedModPack.Mods;
+            FilterMods();
             return Task.CompletedTask;
         }
 
@@ -352,6 +397,7 @@ namespace ModFilesClient.ViewModels
 
         private void FilterMods()
         {
+            ModPackVisibility = false;
             Mods = null;
             if (string.IsNullOrWhiteSpace(ModSearchText))
             {
@@ -363,6 +409,15 @@ namespace ModFilesClient.ViewModels
                 ActiveMods = (ObservableCollection<Mod>)allActiveMods.Where(p => p.ModName.ToLower().StartsWith(ModPackSearchText.ToLower()));
                 Mods = ToObservableCollection(allMods.Where(p => p.ModName.ToLower().StartsWith(ModPackSearchText.ToLower())).ToList());
             }
+
+
+            //List<Mod> templist = new List<Mod>(Mods.ToList());
+            //foreach (Mod mod in ActiveMods)
+            //{
+            //    templist.Remove(mod);
+            //}
+            //Mods = ToObservableCollection(templist);
+            //templist = null;
         }
         #endregion
     }

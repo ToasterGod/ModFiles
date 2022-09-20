@@ -18,7 +18,6 @@ namespace ModFilesClient.Services
             foreach (string item in Directory.GetDirectories(rootFolder).Select(s => Path.GetFileName(s)))
             {
                 d.Add(new Mod { ModName = item });
-                //TODO add all the contents of the mod into each mod while making it
             }
             return d;
         }

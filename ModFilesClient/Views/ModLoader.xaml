@@ -7,20 +7,20 @@
              xmlns:local="clr-namespace:ModFilesClient.Views"
             DataContext="{Binding Source={StaticResource Locator}, Path=MainViewModel}"
              mc:Ignorable="d" 
-             d:DesignHeight="905.013" d:DesignWidth="810">
+             d:DesignHeight="900" d:DesignWidth="810">
 
     <StackPanel>
         <Grid Visibility="{Binding ModPackVisibility, Converter={StaticResource BoolToVisibility}}">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1.1*" />
-                <ColumnDefinition Width="0.1*" />
-                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="1.1*"/>
+                <ColumnDefinition Width="0.1*"/>
+                <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Grid Grid.Column="0">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="1*" />
-                    <RowDefinition Height="320" />
-                    <RowDefinition Height="1*" />
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="320"/>
+                    <RowDefinition Height="1*"/>
                 </Grid.RowDefinitions>
                 <StackPanel Margin="10,0,10,8" HorizontalAlignment="Left">
                     <Label Content="Search Modpacks" Height="32"/>
@@ -35,8 +35,8 @@
                 </DataGrid>
                 <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="10,10,10,0">
                     <Button Height="32" Width="120" Margin="0,0,4,0" Content="New Modpack" Command="{Binding NewPackCommand}"/>
-                    <Button Height="32" Width="120" Margin="4,0" Content="Delete Modpack" Command="{Binding DeletePackCommand}"/>
-                    <Button Height="32" Width="120" Margin="4,0" Content="Activate Modpack" Command="{Binding DeletePackCommand}" Visibility="{Binding PackSelectedVisibility, Converter={StaticResource BoolToVisibility}}"/>
+                    <Button Height="32" Width="120" Margin="4,0" Content="Delete Modpack" Command="{Binding DeletePackCommand}" Visibility="{Binding PackSelectedVisibility, Converter={StaticResource BoolToVisibility}}"/>
+                    <Button Height="32" Width="120" Margin="4,0" Content="Activate Modpack" Command="{Binding UsePackCommand}" Visibility="{Binding PackSelectedVisibility, Converter={StaticResource BoolToVisibility}}"/>
                 </StackPanel>
             </Grid>
 
@@ -51,7 +51,11 @@
                     <TextBox Height="32" HorizontalAlignment="Left" VerticalContentAlignment="Center" TextWrapping="Wrap" Width="120"
                          Text="{Binding ModSearchText, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
-                <ListBox Grid.Row="1" Margin="10,0" ItemsSource="{Binding SelectedModPack.Mods}"/>
+                <DataGrid Grid.Row="1" Margin="10,0" ItemsSource="{Binding SelectedModPack.Mods}" AutoGenerateColumns="False">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Name" Binding="{Binding ModName}" Width="420"/>
+                    </DataGrid.Columns>
+                </DataGrid>
 
                 <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="10,10,10,0">
                     <Button Height="32" Width="120" Margin="0,0,4,0" Content="Edit Modpack" Command="{Binding EditPackCommand}"/>
@@ -61,9 +65,9 @@
 
         <Grid Visibility="{Binding ModVisibility, Converter={StaticResource BoolToVisibility}}">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="1.1*" />
-                <ColumnDefinition Width="0.1*" />
-                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="1.1*"/>
+                <ColumnDefinition Width="0.1*"/>
+                <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Grid Grid.Column="0">
                 <Grid.ColumnDefinitions>
@@ -73,9 +77,9 @@
                     <ColumnDefinition Width="168*"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="1*" />
-                    <RowDefinition Height="320" />
-                    <RowDefinition Height="1*" />
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="320"/>
+                    <RowDefinition Height="1*"/>
                 </Grid.RowDefinitions>
                 <StackPanel Margin="10,0,0,8" HorizontalAlignment="Left" Orientation="Horizontal" Grid.ColumnSpan="4">
                     <StackPanel Margin="4,0,10,8" HorizontalAlignment="Left">
@@ -98,26 +102,27 @@
 
                 <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="10,10,10,0" Grid.ColumnSpan="4">
                     <Button Height="32" Width="120" Margin="0,0,4,0" Content="Save ModPack" Command="{Binding SavePackCommand}"/>
-                    <Button Height="32" Width="120" Margin="4,0,4,0" Content="Use without saving" Command="{Binding TempPackCommand}"/>
+                    <Button Height="32" Width="120" Margin="4,0,4,0" Content="Use without saving" Command="{Binding UsePackCommand}"/>
                     <Button Height="32" Width="120" Margin="4,0,4,0" Content="Add Mods" Command="{Binding AddModCommand}"/>
                 </StackPanel>
             </Grid>
 
             <Grid Grid.Column="2">
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="1*" />
-                    <RowDefinition Height="320" />
-                    <RowDefinition Height="1*" />
+                    <RowDefinition Height="1*"/>
+                    <RowDefinition Height="53.821"/>
+                    <RowDefinition Height="266.179"/>
+                    <RowDefinition Height="1*"/>
                 </Grid.RowDefinitions>
-                <StackPanel Margin="10,0,10,8" HorizontalAlignment="Left">
+                <StackPanel Margin="10,0,0,8" HorizontalAlignment="Left">
                     <Label Content="Search Mods in the selected pack" Height="32"/>
                     <TextBox Height="32" HorizontalAlignment="Left" VerticalContentAlignment="Center" TextWrapping="Wrap" Width="120"
                          Text="{Binding ActiveModSearchText, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
-                <DataGrid x:Name="activeModsList" Grid.Row="1" Margin="10,0" IsReadOnly="True" ItemsSource="{Binding ActiveMods}" 
-                          SelectedItem="{Binding SelectedActiveMod}">
+                <DataGrid x:Name="activeModsList" Grid.Row="1" Margin="10,0,10,0" IsReadOnly="True" ItemsSource="{Binding ActiveMods}" 
+                          SelectedItem="{Binding SelectedActiveMod}" Grid.RowSpan="2">
                 </DataGrid>
-                <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="10,10,10,0">
+                <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="10,10,10,0">
                     <Button Height="32" Width="120" Margin="0,0,4,0" Content="Cancel" Command="{Binding CancelSelectionCommand}"/>
                     <Button Height="32" Width="120" Margin="4,0,4,0" Content="Remove Mod" Command="{Binding RemoveModCommand}"/>
                 </StackPanel>
