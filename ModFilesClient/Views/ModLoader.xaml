@@ -51,7 +51,7 @@
                     <TextBox Height="32" HorizontalAlignment="Left" VerticalContentAlignment="Center" TextWrapping="Wrap" Width="120"
                          Text="{Binding ModSearchText, UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
-                <DataGrid Grid.Row="1" Margin="10,0" ItemsSource="{Binding SelectedModPack.Mods}" AutoGenerateColumns="False">
+                <DataGrid Grid.Row="1" Margin="10,0" ItemsSource="{Binding SelectedModPack.Mods}" AutoGenerateColumns="False" IsReadOnly="True">
                     <DataGrid.Columns>
                         <DataGridTextColumn Header="Name" Binding="{Binding ModName}" Width="420"/>
                     </DataGrid.Columns>

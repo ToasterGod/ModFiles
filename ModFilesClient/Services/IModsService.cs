@@ -1,5 +1,4 @@
 ﻿using ModFilesClient.Models;
-
 using System.Collections.Generic;
 
 namespace ModFilesClient.Services
